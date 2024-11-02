@@ -20,12 +20,14 @@ var upgrader = websocket.Upgrader{
 
 type Message struct {
 	Type      string  `json:"type"`
-	Timestamp float64 `json:"timestamp"`         
+	Timestamp float64 `json:"timestamp"`
 	Payload   *string `json:"payload,omitempty"`
+	SenderID  string  `json:"sender_id"`
 }
 
 var clients = make(map[*websocket.Conn]bool)
 var broadcast = make(chan Message)
+var currTimeStamp float64 = 0
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -37,18 +39,30 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	defer ws.Close()
 
 	clients[ws] = true
+	var senderID = fmt.Sprintf("%p", ws)
+	initialMsg := Message{
+		Type:      "welcome",
+		Timestamp: currTimeStamp,
+		Payload:   nil,
+		SenderID:  "",
+	}
+	log.Println("sending message", initialMsg)
+	if err := ws.WriteJSON(initialMsg); err != nil {
+		log.Println("Error sending initial message:", err)
+	}
 
 	for {
 		var msg Message
 		err := ws.ReadJSON(&msg)
 		if err != nil {
 			log.Println("Error reading JSON:", err)
+			log.Println(&msg)
 			delete(clients, ws)
 			break
 		}
 
+		msg.SenderID = senderID
 		broadcast <- msg
-
 	}
 }
 
@@ -56,6 +70,11 @@ func handleMessages() {
 	for {
 		msg := <-broadcast
 		for client := range clients {
+
+			if fmt.Sprintf("%p", client) == msg.SenderID {
+				continue
+			}
+			currTimeStamp = float64(msg.Timestamp)
 			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Println("Error writing JSON:", err)
@@ -74,7 +93,7 @@ func sendVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	const videoPath = "/home/dylan/projects/streamlink/starcraft.mp4"
+	const videoPath = "C:\\projects\\streamlink\\starcraft.mp4"
 	fileInfo, err := os.Stat(videoPath)
 	if err != nil {
 		log.Println("Error getting file stats:", err)

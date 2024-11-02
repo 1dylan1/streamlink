@@ -1,70 +1,107 @@
 import { useEffect, useRef, useState } from 'react';
 
-type MessageType = "play" | "pause" | "update";
+type MessageType = "play" | "pause" | "update" | "welcome";
+type Source = "ws" | "self";
 
 function App() {
   const socket = useRef<WebSocket | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [lastSentTimestamp, setLastSentTimestamp] = useState<number | null>(null); 
+  const isReactingToMessage = useRef<boolean>(false);
+  const lastSendTimeStamp = useRef<number | null>(null);
+
   useEffect(() => {
     socket.current = new WebSocket("ws://localhost:8080/ws");
 
-    socket.current.onmessage = function(event) {
+    socket.current.onmessage = function (event) {
       const message = JSON.parse(event.data);
       console.log("Message received: ", message);
+      
+      isReactingToMessage.current = true;
 
-      if (message.type === "play" && videoRef.current) {
-        videoRef.current.currentTime = message.timestamp / 1000;
-        videoRef.current.play(); 
-      } else if (message.type === "pause" && videoRef.current) {
-        videoRef.current.pause();
-      } else if (message.type === "update" && videoRef.current) {
-        videoRef.current.currentTime = message.timestamp / 1000; 
+      if(videoRef.current) {
+        if (message.type === "play") {
+          videoRef.current.play();
+          videoRef.current.currentTime = message.timestamp / 1000;
+        } else if (message.type === "pause") {
+          videoRef.current.pause();
+          videoRef.current.currentTime = message.timestamp / 1000;
+        } else if (message.type === "update" || message.type === "welcome") {
+          videoRef.current.currentTime = message.timestamp / 1000;
+        }
+        lastSendTimeStamp.current = videoRef.current.currentTime * 1000;
       }
+
     };
 
     return () => {
-      socket.current?.close(); 
+      socket.current?.close();
     };
   }, []);
 
-  function sendMessage(type: MessageType, timestamp: number, payload?: string) {
+  function sendMessage(type: MessageType, timestamp: number) {
     if (socket.current) {
-      socket.current.send(JSON.stringify({ type, timestamp, payload }));
+      console.log(`[SENT]: type: ${type} ts: ${timestamp}`)
+      socket.current.send(JSON.stringify({ type, timestamp }));
+    }
+  }
+
+  const handlePlay = () => {
+    if(!videoRef.current) return;
+    const currentTime = Math.floor(videoRef.current.currentTime * 1000);
+    if(!isReactingToMessage.current) {
+      console.log(`[SEND]: curr: ${currentTime} last: ${lastSendTimeStamp.current} isReacting: ${isReactingToMessage.current}`)
+      sendMessage("play", currentTime);
+      lastSendTimeStamp.current = currentTime;
+    } else {
+      isReactingToMessage.current = false;
+      lastSendTimeStamp.current = currentTime;
+    }
+  }
+
+  const handlePause = () => {
+    if(!videoRef.current) return;
+      const currentTime = Math.floor(videoRef.current.currentTime * 1000);
+    if(!isReactingToMessage.current) {
+      console.log(`[SEND]: curr: ${currentTime} last: ${lastSendTimeStamp.current} isReacting: ${isReactingToMessage.current}`)
+      sendMessage("pause", currentTime);
+      lastSendTimeStamp.current = currentTime;
+    } else {
+      isReactingToMessage.current = false;
+      lastSendTimeStamp.current = currentTime;
     }
   }
 
   const handleSeeked = () => {
-    if (videoRef.current) {
+    if(!videoRef.current) return;
       const currentTime = Math.floor(videoRef.current.currentTime * 1000);
-
-      if (lastSentTimestamp !== currentTime) {
-        sendMessage("update", currentTime); 
-        setLastSentTimestamp(currentTime);
-      }
+    if(!isReactingToMessage.current) {
+      console.log(`[SEND]: curr: ${currentTime} last: ${lastSendTimeStamp.current} isReacting: ${isReactingToMessage.current}`)
+      sendMessage("update", currentTime);
+      lastSendTimeStamp.current = currentTime;
+    } else {
+      isReactingToMessage.current = false;
+      lastSendTimeStamp.current = currentTime;
     }
-  };
+  }
+
 
   return (
     <div>
-      <video ref={videoRef} onSeeked={handleSeeked} controls width="1000" playsInline>
+      <video
+        ref={videoRef}
+        onSeeking={handleSeeked}
+        onPlay={handlePlay}
+        onPause={handlePause}
+        muted
+        controls
+        width="1000"
+        playsInline
+        controlsList="nodownload noplaybackrate"
+        disablePictureInPicture 
+      >
         <source src="http://localhost:8080/stream" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      <button onClick={() => {
-        if (videoRef.current) {
-          videoRef.current.play();
-          const currentTime = Math.floor(videoRef.current.currentTime * 1000);
-          sendMessage("play", currentTime);
-        }
-      }}>Play</button>
-      <button onClick={() => {
-        if (videoRef.current) {
-          videoRef.current.pause();
-          const currentTime = Math.floor(videoRef.current.currentTime * 1000);
-          sendMessage("pause", currentTime);
-        }
-      }}>Pause</button>
     </div>
   );
 }
