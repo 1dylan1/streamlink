@@ -95,7 +95,7 @@ function App() {
         controls
         width="1000"
         playsInline
-        controlsList="nodownload noplaybackrate"z
+        controlsList="nodownload noplaybackrate"
         disablePictureInPicture 
       >
         <source src="https://dev.midnight.cat/api/stream" type="video/mp4" />
