@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 type MessageType = "play" | "pause" | "update" | "welcome";
-type Source = "ws" | "self";
 
 function App() {
   const socket = useRef<WebSocket | null>(null);
