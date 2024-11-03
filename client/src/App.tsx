@@ -98,7 +98,7 @@ function App() {
         controlsList="nodownload noplaybackrate"
         disablePictureInPicture 
       >
-        <source src="http://localhost:8080/stream" type="video/mp4" />
+        <source src="http://104.131.38.60:2054/stream" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
     </div>
