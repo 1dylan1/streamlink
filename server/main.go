@@ -28,6 +28,7 @@ type Message struct {
 var clients = make(map[*websocket.Conn]bool)
 var broadcast = make(chan Message)
 var currTimeStamp float64 = 0
+var videoPath = os.Getenv("VIDEO_PATH")
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -93,7 +94,6 @@ func sendVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	const videoPath = "C:\\projects\\streamlink\\starcraft.mp4"
 	fileInfo, err := os.Stat(videoPath)
 	if err != nil {
 		log.Println("Error getting file stats:", err)

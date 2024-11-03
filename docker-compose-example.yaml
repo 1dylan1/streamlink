@@ -1,0 +1,31 @@
+services:
+  streamlink:
+    build: client
+    container_name: streamlink
+    ports:
+      - 3000:3000
+    networks:
+      - streamlink
+    environment:
+        - PROD=true
+    logging:
+        driver: none
+    restart: always
+  streamlink-backend:
+    build: server
+    container_name: streamlink-backend
+    ports:
+      - 2053:8080
+    networks:
+      - streamlink
+    logging:
+      driver: json-file
+      options:
+        max-size: 2g # 2gb per log file w/ log rotation
+        max-file: '2' # Max of 2 log files (4gb total)
+    restart: always
+    environment:
+      - VIDEO_PATH=/path/to/video/file
+networks:
+  streamlink:
+    name: streamlink
