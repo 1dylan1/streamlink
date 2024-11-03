@@ -3,7 +3,7 @@ services:
     build: client
     container_name: streamlink
     ports:
-      - 3000:3000
+      - 3005:3000
     networks:
       - streamlink
     environment:
@@ -15,7 +15,7 @@ services:
     build: server
     container_name: streamlink-backend
     ports:
-      - 2053:8080
+      - 2055:8080
     networks:
       - streamlink
     logging:
