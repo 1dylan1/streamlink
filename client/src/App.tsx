@@ -9,7 +9,7 @@ function App() {
   const lastSendTimeStamp = useRef<number | null>(null);
 
   useEffect(() => {
-    socket.current = new WebSocket("ws://dev.midnight.cat/api/ws");
+    socket.current = new WebSocket("wss://dev.midnight.cat/api/ws");
 
     socket.current.onmessage = function (event) {
       const message = JSON.parse(event.data);
