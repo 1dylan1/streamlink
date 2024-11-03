@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-WORKDIR /app/cmd/mn-backend
+WORKDIR /app
 
 RUN CGO_ENABLED=1 GOOS=linux go build -o /backend
 
