@@ -163,8 +163,8 @@ func sendVideo(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/ws", handleConnections)
-	http.HandleFunc("/stream", sendVideo)
+	http.HandleFunc("/api/ws", handleConnections)
+	http.HandleFunc("/api/stream", sendVideo)
 
 	go handleMessages()
 

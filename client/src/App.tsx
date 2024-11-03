@@ -9,7 +9,7 @@ function App() {
   const lastSendTimeStamp = useRef<number | null>(null);
 
   useEffect(() => {
-    socket.current = new WebSocket("ws://104.131.38.60:2054/ws");
+    socket.current = new WebSocket("ws://dev.midnight.cat/api/ws");
 
     socket.current.onmessage = function (event) {
       const message = JSON.parse(event.data);
@@ -95,10 +95,10 @@ function App() {
         controls
         width="1000"
         playsInline
-        controlsList="nodownload noplaybackrate"
+        controlsList="nodownload noplaybackrate"z
         disablePictureInPicture 
       >
-        <source src="http://104.131.38.60:2054/stream" type="video/mp4" />
+        <source src="https://dev.midnight.cat/api/stream" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
     </div>
